@@ -23,6 +23,7 @@ const loadCommands = (dir, category = null) => {
             loadCommands(fullPath, entry.name);
         } else if(entry.name.endsWith('.js')) {
             const command = require(fullPath);
+            if(!command.data) continue;
             client.commands.set(command.data.name, command);
         }
     }

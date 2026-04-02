@@ -17,8 +17,9 @@ const loadCommands = (dir) => {
             loadCommands(fullPath);
         } else if(entry.name.endsWith('.js')) {
             const command = require(fullPath);
+            if(!command.data) continue;
             console.log(`Loaded command: ${command.data.name}`);
-            if(command.data) commands.push(command.data.toJSON());
+            commands.push(command.data.toJSON());
         }
     }
 };
