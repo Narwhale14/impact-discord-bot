@@ -76,8 +76,8 @@ module.exports = {
             }
 
             if(sub === 'memberrole') {
-                if(guildDBData?.guild_member_role) 
-                    return interaction.reply({ embeds: [embeds.errorEmbed(`The guild member role is already set to <@&${guildDBData.guild_member_role}>.`)], allowedMentions: { roles: [] }});
+                if(guildDBData?.guild_member_role)
+                    return interaction.editReply({ embeds: [embeds.errorEmbed(`The guild member role is already set to <@&${guildDBData.guild_member_role}>.`)], allowedMentions: { roles: [] }});
                 const applyRole = interaction.options.getRole('role');
                 if(!applyRole) 
                     return interaction.editReply({ embeds: [embeds.errorEmbed('Invalid role!')] });
@@ -92,8 +92,8 @@ module.exports = {
             }
 
             if(sub === 'staffping') {
-                if(guildDBData?.application_ping) 
-                    return interaction.reply({ embeds: [embeds.errorEmbed(`The application ping role is already set to <@&${guildDBData.application_ping}>.`)], allowedMentions: { roles: [] }});
+                if(guildDBData?.application_ping)
+                    return interaction.editReply({ embeds: [embeds.errorEmbed(`The application ping role is already set to <@&${guildDBData.application_ping}>.`)], allowedMentions: { roles: [] }});
                 const applyRole = interaction.options.getRole('role');
                 if(!applyRole) 
                     return interaction.editReply({ embeds: [embeds.errorEmbed('Invalid role!')] });
