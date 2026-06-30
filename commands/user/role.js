@@ -82,7 +82,11 @@ module.exports = {
                         .setColor(embeds.SUCCESS_COLOR)
                         .setTimestamp();
 
-                    logsChannel.send({ embeds: [logsEmbed], allowedMentions: { roles: [] } });
+                    logsChannel.send({
+                        content: `<@&${guildDBData.application_ping}>`,
+                        embeds: [logsEmbed],
+                        allowedMentions: { roles: [guildDBData.application_ping] }
+                    });
                 } else if(guildDBData.role_mappings[inGameRank] && guildDBData.requests_enabled === false) {
                     success += `\n\nThis guild has Hypixel rank update notifications disabled, try asking someone capable in-game to get it!`
                 }
