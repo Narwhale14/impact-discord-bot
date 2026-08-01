@@ -38,7 +38,7 @@ const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.j
 
 for(const file of buttonFiles) {
     const button = require(`./interactions/buttons/${file}`);
-    client.buttons.set(button.customId, button);
+    for(const id of button.customIds || [button.customId]) client.buttons.set(id, button);
 }
 
 // modals collection

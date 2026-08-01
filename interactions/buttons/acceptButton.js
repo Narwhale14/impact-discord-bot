@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getGuildData } = require('../../utils/DBManagers/guildDataManager.js');
 const { getOpenApplication, deleteOpenApplication } = require('../../utils/DBManagers/openApplicationsManager.js');
 const { getProfileSkyblockLevelByUUID } = require('../../utils/APIManagers/hypixelAPIManager.js')
@@ -33,6 +33,19 @@ module.exports = {
                 .setColor(embeds.SUCCESS_COLOR);
 
             await interaction.message.edit({ embeds: [updateEmbed], components: [] })
+
+            const invitedRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('invite_complete_button').setLabel('Complete').setStyle(ButtonStyle.Success),
+                new ButtonBuilder().setCustomId('invite_cancel_button').setLabel('Cancel').setStyle(ButtonStyle.Danger)
+            );
+
+            const invitedEmbed = new EmbedBuilder()
+                .setTitle('Invited')
+                .setDescription(`The player **${app.minecraft_name}** is waiting to join the guild.`)
+                .setColor(embeds.WARNING_COLOR)
+                .setTimestamp();
+
+            await interaction.channel.send({ embeds: [invitedEmbed], components: [invitedRow] });
 
             const user = await interaction.client.users.fetch(app.discord_user_id);
 
