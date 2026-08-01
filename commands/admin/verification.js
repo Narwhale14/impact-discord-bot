@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionContextType } = require('discord.js');
 const { getGuildData, updateGuildColumn } = require('../../utils/DBManagers/guildDataManager.js');
 const embeds = require('../../interactions/embeds.js');
 
@@ -15,6 +15,7 @@ const embeds = require('../../interactions/embeds.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('verification')
+        .setContexts(InteractionContextType.Guild)
         .setDescription('initialize and create verifcation message')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(sub => sub

@@ -69,6 +69,8 @@ const respondWithError = async (interaction, message, err) => {
 }
 
 client.on('interactionCreate', async interaction => {
+    if(!interaction.guild) return;
+
     if(interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);
         if (!command) return;

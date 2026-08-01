@@ -26,12 +26,28 @@ const loadCommands = (dir) => {
 
 loadCommands(path.join(__dirname, 'commands'));
 
-// register slash cmds
+const mode = (process.argv[2] || 'guild').replace(/^--/, '');
+
 (async () => {
+    if(!process.env.CLIENT_ID) return console.error('CLIENT_ID is not set.');
+    if(mode !== 'global' && !process.env.GUILD_ID) return console.error(`Mode '${mode}' needs GUILD_ID set.`);
+
     try {
-        console.log(`Registering ${commands.length} commands...`);
-        await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands });
-        console.log('Commands registered successfully!');
+        if(mode === 'global') {
+            console.log(`Registering ${commands.length} commands globally...`);
+            await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+            console.log('Registered globally. May take up to an hour to appear everywhere.');
+        } else if(mode === 'clear') {
+            console.log(`Clearing guild commands from ${process.env.GUILD_ID}...`);
+            await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: [] });
+            console.log('Guild commands cleared.');
+        } else if(mode === 'guild') {
+            console.log(`Registering ${commands.length} commands to guild ${process.env.GUILD_ID}...`);
+            await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands });
+            console.log('Registered to guild.');
+        } else {
+            console.error(`Unknown mode '${mode}'. Use: guild (default) | global | clear`);
+        }
     } catch(err) {
         console.error(err);
     }

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionContextType } = require('discord.js');
 const { getGuildData, updateGuildColumn } = require('../../utils/DBManagers/guildDataManager.js');
 const { getGuildById } = require('../../utils/APIManagers/hypixelAPIManager.js');
 const embeds = require('../../interactions/embeds.js');
@@ -15,6 +15,7 @@ const embeds = require('../../interactions/embeds.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('rank')
+        .setContexts(InteractionContextType.Guild)
         .setDescription('Connection manager between in-game guild rank with discord role')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(sub => sub

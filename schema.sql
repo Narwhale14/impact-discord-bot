@@ -13,11 +13,12 @@ CREATE TABLE IF NOT EXISTS guild_data (
 
 CREATE TABLE IF NOT EXISTS linked_players (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    discord_id TEXT NOT NULL UNIQUE,
+    discord_id TEXT NOT NULL,
     hypixel_uuid TEXT NOT NULL,
     hypixel_name TEXT NOT NULL,
     guild_data_id INTEGER NOT NULL REFERENCES guild_data(id) ON DELETE CASCADE,
-    linked_at TEXT NOT NULL DEFAULT (datetime('now'))
+    linked_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(discord_id, guild_data_id)
 );
 
 CREATE TABLE IF NOT EXISTS open_applications (

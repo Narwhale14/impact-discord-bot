@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, InteractionContextType } = require('discord.js');
 const { createPageEmbed, flattenCommands } = require('../../utils/helpBuilders.js');
 const embeds = require('../../interactions/embeds');
 
@@ -9,6 +9,7 @@ const embeds = require('../../interactions/embeds');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
+        .setContexts(InteractionContextType.Guild)
         .setDescription('Lists all available user commands'),
     async execute(interaction) {
         const userType = 'User';

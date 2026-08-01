@@ -1,6 +1,7 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { Pool } = require('pg');
-const { db } = require('./database.js');
+const { db } = require('../database.js');
 
 const force = process.argv.includes('--force');
 

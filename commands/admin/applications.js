@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionContextType } = require('discord.js');
 const { updateGuildColumn, getGuildData } = require('../../utils/DBManagers/guildDataManager.js');
 const { getGuildById } = require('../../utils/APIManagers/hypixelAPIManager.js');
 const embeds = require('../../interactions/embeds.js');
@@ -21,6 +21,7 @@ const embeds = require('../../interactions/embeds.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('app')
+        .setContexts(InteractionContextType.Guild)
         .setDescription('Manages server guild applications and mod stuff')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommandGroup(group => group.setName('set').setDescription('sets stuff')

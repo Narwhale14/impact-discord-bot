@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, InteractionContextType } = require('discord.js');
 const { getGuildData } = require('../../utils/DBManagers/guildDataManager.js');
 const { updateLinkedPlayers } = require(`../../utils/DBManagers/linkedPlayersManager.js`);
 const { getPlayerByName, getMemberInGuildByPlayerUUID } = require('../../utils/APIManagers/hypixelAPIManager.js');
@@ -11,6 +11,7 @@ const embeds = require('../../interactions/embeds.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('link')
+        .setContexts(InteractionContextType.Guild)
         .setDescription('Links to your Minecraft Hypixel account')
         .addStringOption(option => option.setName('name').setDescription('Account name (MUST have discord connected)').setRequired(true)),
     async execute(interaction) {

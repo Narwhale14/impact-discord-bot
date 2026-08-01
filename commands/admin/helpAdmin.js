@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, InteractionContextType } = require('discord.js');
 const { createPageEmbed, flattenCommands } = require('../../utils/helpBuilders.js');
 const embeds = require('../../interactions/embeds');
 
@@ -9,6 +9,7 @@ const embeds = require('../../interactions/embeds');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('helpadmin')
+        .setContexts(InteractionContextType.Guild)
         .setDescription('Lists all available admin commands')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
         adminOnly: true,

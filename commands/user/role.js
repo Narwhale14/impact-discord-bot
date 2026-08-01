@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, InteractionContextType } = require('discord.js');
 const { getGuildData } = require('../../utils/DBManagers/guildDataManager.js');
 const { getLinkedPlayer } = require('../../utils/DBManagers/linkedPlayersManager.js');
 const { getProfileSkyblockLevelByUUID, getMemberInGuildByPlayerUUID } = require('../../utils/APIManagers/hypixelAPIManager.js');
@@ -16,6 +16,7 @@ const embeds = require('../../interactions/embeds.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('role')
+        .setContexts(InteractionContextType.Guild)
         .setDescription('User commands relating to hypixel rank/discord roles')
         .addSubcommand(sub => sub
             .setName('update')
@@ -37,8 +38,8 @@ module.exports = {
 
         // update subcommand
         if(subcommand === 'update') {
-            const linkedPlayer = await getLinkedPlayer(interaction.user.id);
-            if(!linkedPlayer || linkedPlayer.guild_data_id !== guildDBData.id)
+            const linkedPlayer = await getLinkedPlayer(interaction.user.id, guildDBData.id);
+            if(!linkedPlayer)
                 return interaction.editReply({ embeds: [embeds.errorEmbed("You are not linked to the guild for this server.\nIf you believe you are in the guild, run `/link <minecraft username>`")] });
             
             const profileName = interaction.options.getString('profile');
