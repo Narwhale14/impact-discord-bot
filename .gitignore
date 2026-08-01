@@ -1,3 +1,6 @@
 .env
 node_modules/
 tables.txt
+*.db
+*.db-wal
+*.db-shm

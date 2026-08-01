@@ -160,7 +160,7 @@ module.exports = {
                 return interaction.editReply({ embeds: [embeds.errorEmbed(`Logs channel not configured!\nPlease run: \`/applications log set <#channel>\``)] });
             try {
                 await updateGuildColumn(interaction.guild, 'requests_enabled', rolesToggle);
-                await interaction.editReply({ embeds: [embeds.successEmbed(`Toggled role requests to **${rolesToggle}**!\nThey will be sent in <#${guildDBData.logs_channel_id}>`, interaction.guild.members.me.displayHexColor)] });
+                await interaction.editReply({ embeds: [embeds.successEmbed(`Toggled role requests to **${rolesToggle}**!\nThey will/will not be sent in <#${guildDBData.logs_channel_id}>`, interaction.guild.members.me.displayHexColor)] });
             } catch(err) {
                 console.error("Failed running '/apps log roles'", err);
                 await interaction.editReply({ embeds: [embeds.errorEmbed(`An error occured while toggling role logs!`, err.message)] });

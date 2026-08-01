@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { getGuildData } = require('../../utils/DBManagers/guildDataManager.js');
+const { countLinkedPlayers } = require('../../utils/DBManagers/linkedPlayersManager.js');
 const embeds = require('../../interactions/embeds.js');
 
 module.exports = {
@@ -10,6 +11,7 @@ module.exports = {
         adminOnly: true,
     async execute(interaction) {
         const guildDBData = await getGuildData(interaction.guild);
+        const linkedCount = await countLinkedPlayers(guildDBData.id);
 
         const listEmbed = new EmbedBuilder()
             .setTitle('List of Server Data')
@@ -23,7 +25,9 @@ module.exports = {
                 value: value !== null && value !== undefined ? `${value}` : 'None',
                 inline: true
             });
-        }     
+        }
+
+        listEmbed.addFields({ name: 'linked_players', value: `${linkedCount}`, inline: true });
 
         return interaction.reply({ embeds: [listEmbed] });
     }

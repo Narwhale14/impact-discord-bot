@@ -1,20 +1,19 @@
-const { pool } = require('../../database.js');
+const { db } = require('../../database.js');
 
 async function updateOpenApplications({ guildDataId, logsMessageId, discordUserId, minecraftName, profileName, hypixelUUID }) {
     try {
-        await pool.query(
+        db.prepare(
             `INSERT INTO open_applications (guild_data_id, logs_message_id, discord_user_id, minecraft_name, profile_name, created_at, hypixel_uuid)
-            VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+            VALUES (?, ?, ?, ?, ?, datetime('now'), ?)
             ON CONFLICT (logs_message_id)
             DO UPDATE SET
-                guild_data_id = EXCLUDED.guild_data_id,
-                discord_user_id = EXCLUDED.discord_user_id,
-                minecraft_name = EXCLUDED.minecraft_name,
-                profile_name = EXCLUDED.profile_name,
-                created_at = NOW(),
-                hypixel_uuid = EXCLUDED.hypixel_uuid`,
-            [guildDataId, logsMessageId, discordUserId, minecraftName, profileName, hypixelUUID]
-        );
+                guild_data_id = excluded.guild_data_id,
+                discord_user_id = excluded.discord_user_id,
+                minecraft_name = excluded.minecraft_name,
+                profile_name = excluded.profile_name,
+                created_at = datetime('now'),
+                hypixel_uuid = excluded.hypixel_uuid`
+        ).run(guildDataId, String(logsMessageId), String(discordUserId), minecraftName, profileName ?? null, hypixelUUID ?? null);
     } catch(err) {
         console.error(`DB error in updateOpenApplications: `, err);
         throw err;
@@ -23,10 +22,7 @@ async function updateOpenApplications({ guildDataId, logsMessageId, discordUserI
 
 async function deleteOpenApplication(logsMessageId) {
     try {
-        await pool.query(
-            `DELETE FROM open_applications WHERE logs_message_id = $1`, 
-            [logsMessageId]
-        );
+        db.prepare(`DELETE FROM open_applications WHERE logs_message_id = ?`).run(String(logsMessageId));
     } catch(err) {
         console.error(`DB error in deleteOpenApplications: attempted to delete logsMessageId=${logsMessageId}: `, err);
         throw err;
@@ -35,12 +31,7 @@ async function deleteOpenApplication(logsMessageId) {
 
 async function getOpenApplication(logsMessageId) {
     try {
-        const res = await pool.query(
-            `SELECT * FROM open_applications WHERE logs_message_id = $1`,
-            [logsMessageId]
-        );
-
-        return res.rows[0] || null;
+        return db.prepare(`SELECT * FROM open_applications WHERE logs_message_id = ?`).get(String(logsMessageId)) || null;
     } catch(err) {
         console.error(`DB error in getOpenApplication: attempted to fetch logsMessageId=${logsMessageId}: `, err);
         throw err;
@@ -49,13 +40,10 @@ async function getOpenApplication(logsMessageId) {
 
 async function getOpenApplicationFromPlayerName(guildDataId, playerName) {
     try {
-        const res = await pool.query(
+        return db.prepare(
             `SELECT * FROM open_applications
-            WHERE guild_data_id = $1 AND LOWER(minecraft_name) = LOWER($2)`,
-            [guildDataId, playerName]
-        );
-
-        return res.rows[0] || null;
+            WHERE guild_data_id = ? AND LOWER(minecraft_name) = LOWER(?)`
+        ).get(guildDataId, playerName) || null;
     } catch(err) {
         console.error(`DB error in getOpenApplicationFromPlayerName: attempted to fetch playerName=${playerName} in guildDataId=${guildDataId}: `, err);
         throw err;

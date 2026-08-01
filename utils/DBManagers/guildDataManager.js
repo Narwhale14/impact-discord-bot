@@ -1,4 +1,27 @@
-const { pool } = require('../../database.js');
+const { db } = require('../../database.js');
+
+const allowedColumns = [
+    'verification_role',
+    'role_mappings',
+    'hypixel_guild_id',
+    'requests_enabled',
+    'logs_channel_id',
+    'guild_member_role',
+    'application_ping'
+];
+
+const jsonColumns = ['role_mappings'];
+const booleanColumns = ['requests_enabled'];
+
+function hydrate(row) {
+    if(!row) return null;
+
+    return {
+        ...row,
+        role_mappings: row.role_mappings ? JSON.parse(row.role_mappings) : null,
+        requests_enabled: Boolean(row.requests_enabled)
+    };
+}
 
 /**
  * Gets the guild_data row for a server, creating it if it doesn't exist yet.
@@ -11,23 +34,16 @@ async function getGuildData(guild) {
         const guildId = typeof guild === 'string' ? guild : guild?.id;
         const guildName = typeof guild === 'object' ? guild.name : null;
 
-        const res = await pool.query(
-            `SELECT * FROM guild_data WHERE discord_server_id = $1`,
-            [guildId]
-        );
+        const existing = db.prepare(`SELECT * FROM guild_data WHERE discord_server_id = ?`).get(guildId);
+        if(existing) return hydrate(existing);
 
-        if(res.rowCount > 0) return res.rows[0];
-
-        const created = await pool.query(
+        db.prepare(
             `INSERT INTO guild_data (discord_server_id, discord_server_name)
-            VALUES ($1, $2)
-            ON CONFLICT (discord_server_id) DO UPDATE SET
-                discord_server_name = COALESCE(EXCLUDED.discord_server_name, guild_data.discord_server_name)
-            RETURNING *`,
-            [guildId, guildName]
-        );
+            VALUES (?, ?)
+            ON CONFLICT (discord_server_id) DO NOTHING`
+        ).run(guildId, guildName);
 
-        return created.rows[0];
+        return hydrate(db.prepare(`SELECT * FROM guild_data WHERE discord_server_id = ?`).get(guildId));
     } catch(err) {
         console.error('DB error in getGuildData: ', err);
         throw err;
@@ -37,52 +53,31 @@ async function getGuildData(guild) {
 /**
  * sets a single guild_data column
  * @param {*} guild guild id or object (interaction.guild.id)
- * @param {*} columnName name of column in table (must be in allowedColumns below)
+ * @param {*} columnName name of column in table (must be in allowedColumns above)
  * @param {*} value value to set (pass null to erase)
  */
 async function updateGuildColumn(guild, columnName, value) {
     const guildId = typeof guild === 'string' ? guild : guild?.id;
     const guildName = typeof guild === 'object' ? guild.name : null;
-    let dbValue = value;
+    let dbValue = value ?? null;
 
-    const allowedColumns = [
-        'verification_role',
-        'role_mappings',
-        'hypixel_guild_id',
-        'requests_enabled',
-        'logs_channel_id',
-        'guild_member_role',
-        'application_ping'
-    ];
-
-    const jsonColumns = ['role_mappings'];
-
-    // handle JSON automatically for specific columns
-    if(jsonColumns.includes(columnName) && value !== null && value !== undefined)
-        dbValue = JSON.stringify(value);
+    if(dbValue !== null && jsonColumns.includes(columnName)) dbValue = JSON.stringify(dbValue);
+    if(dbValue !== null && booleanColumns.includes(columnName)) dbValue = Number(Boolean(dbValue));
 
     try {
         if(!allowedColumns.includes(columnName)) throw new Error('Invalid column name!');
         if(!guildId) throw new Error('updateGuildColumn called without valid guildId');
 
-        const res = await pool.query(
-            `SELECT 1 FROM guild_data WHERE discord_server_id = $1`,
-            [guildId]
-        );
+        const exists = db.prepare(`SELECT 1 FROM guild_data WHERE discord_server_id = ?`).get(guildId);
 
-        // creates guild_data entry if didn't exist
-        if(res.rowCount === 0) {
-            await pool.query(
+        if(!exists) {
+            db.prepare(
                 `INSERT INTO guild_data (discord_server_id, discord_server_name, ${columnName})
-                VALUES ($1, $2, $3)
-                ON CONFLICT (discord_server_id) DO NOTHING`,
-                [guildId, guildName, dbValue]
-            );
+                VALUES (?, ?, ?)
+                ON CONFLICT (discord_server_id) DO NOTHING`
+            ).run(guildId, guildName, dbValue);
         } else {
-            await pool.query(
-                `UPDATE guild_data SET ${columnName} = $1 WHERE discord_server_id = $2`,
-                [dbValue, guildId]
-            )
+            db.prepare(`UPDATE guild_data SET ${columnName} = ? WHERE discord_server_id = ?`).run(dbValue, guildId);
         }
     } catch(err) {
         console.error('Error updating guild column', err);

@@ -1,19 +1,17 @@
-const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
+const { DatabaseSync } = require('node:sqlite');
 
-// Create a pool of connections
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-    max: 10, // optional: maximum number of connections
-    idleTimeoutMillis: 10000, // 30s, optional: how long a client can sit idle
-    connectionTimeoutMillis: 10000, // 2s, optional: wait for connection before failing
-});
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'bot.db');
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-// Handle unexpected errors on idle clients
-pool.on('error', err => {
-    console.error('Unexpected error on idle DB client', err);
-});
+const db = new DatabaseSync(dbPath);
 
-console.log('Database pool initialized');
+db.exec('PRAGMA journal_mode = WAL');
+db.exec('PRAGMA foreign_keys = ON');
+db.exec('PRAGMA busy_timeout = 5000');
+db.exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
 
-module.exports = { pool };
+console.log(`Database ready at ${dbPath}`);
+
+module.exports = { db };
