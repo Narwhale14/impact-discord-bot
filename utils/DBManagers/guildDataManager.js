@@ -1,55 +1,8 @@
 const { pool } = require('../../database.js');
 
 /**
- * Helper function that updates ALL guild data, accepting 1 or more of the table contents
- * @param {*} guild guild object (interaction.guild)
- * @param {*} param1 table contents
- */
-async function updateGuildData(guild, { verificationRoleId, roleMappings, hypixelGuildId, requestsEnabled, logsChannelId, guildMemberRoleId, applicationPingId }) {
-    try {
-        await pool.query(
-            `INSERT INTO guild_data (
-                discord_server_id, 
-                discord_server_name, 
-                verification_role, 
-                role_mappings, 
-                hypixel_guild_id, 
-                requests_enabled, 
-                logs_channel_id,
-                guild_member_role,
-                application_ping)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (discord_server_id)
-            DO UPDATE SET
-                discord_server_name = COALESCE($2, guild_data.discord_server_name),
-                verification_role = COALESCE($3, guild_data.verification_role),
-                role_mappings = COALESCE($4, guild_data.role_mappings),
-                hypixel_guild_id = COALESCE($5, guild_data.hypixel_guild_id),
-                requests_enabled = COALESCE($6, guild_data.requests_enabled),
-                logs_channel_id = COALESCE($7, guild_data.logs_channel_id),
-                guild_member_role = COALESCE($8, guild_data.guild_member_role),
-                application_ping = COALESCE($9, guild_data.application_ping)`,
-            [
-                guild.id, 
-                guild.name,
-                verificationRoleId || null, 
-                roleMappings ? JSON.stringify(roleMappings) : null,
-                hypixelGuildId || null,
-                requestsEnabled || false,
-                logsChannelId || null,
-                guildMemberRoleId || null,
-                applicationPingId || null
-            ]
-        );
-    } catch(err) {
-        console.error('DB error in updateGuildData: ', err);
-        throw err;
-    }
-}
-
-/**
- * Gets a piece of data from the guild_data table. works as the same function above, updates only one column
- * can also create new entries
+ * Gets the guild_data row for a server, creating it if it doesn't exist yet.
+ * Always returns a row, so first-time servers don't get `undefined` back.
  * @param {*} guild interaction.guild
  * @returns the data
  */
@@ -62,17 +15,19 @@ async function getGuildData(guild) {
             `SELECT * FROM guild_data WHERE discord_server_id = $1`,
             [guildId]
         );
-        
-        if(res.rowCount === 0) {
-            await pool.query(
-                `INSERT INTO guild_data (discord_server_id, discord_server_name)
-                VALUES ($1, $2)
-                ON CONFLICT (discord_server_id) DO NOTHING`,
-                [guildId, guildName]
-            );
-        }
 
-        return res.rows[0];
+        if(res.rowCount > 0) return res.rows[0];
+
+        const created = await pool.query(
+            `INSERT INTO guild_data (discord_server_id, discord_server_name)
+            VALUES ($1, $2)
+            ON CONFLICT (discord_server_id) DO UPDATE SET
+                discord_server_name = COALESCE(EXCLUDED.discord_server_name, guild_data.discord_server_name)
+            RETURNING *`,
+            [guildId, guildName]
+        );
+
+        return created.rows[0];
     } catch(err) {
         console.error('DB error in getGuildData: ', err);
         throw err;
@@ -80,9 +35,9 @@ async function getGuildData(guild) {
 }
 
 /**
- * nullifies guild data by column
+ * sets a single guild_data column
  * @param {*} guild guild id or object (interaction.guild.id)
- * @param {*} columnName name of column in table (see neon db or updateGuildData)
+ * @param {*} columnName name of column in table (must be in allowedColumns below)
  * @param {*} value value to set (pass null to erase)
  */
 async function updateGuildColumn(guild, columnName, value) {
@@ -108,7 +63,7 @@ async function updateGuildColumn(guild, columnName, value) {
 
     try {
         if(!allowedColumns.includes(columnName)) throw new Error('Invalid column name!');
-        if(!guildId) throw new Error('nullifyGuildColumn called without valid guildId');
+        if(!guildId) throw new Error('updateGuildColumn called without valid guildId');
 
         const res = await pool.query(
             `SELECT 1 FROM guild_data WHERE discord_server_id = $1`,
@@ -130,9 +85,9 @@ async function updateGuildColumn(guild, columnName, value) {
             )
         }
     } catch(err) {
-        console.error('Error nullifying guild column', err);
+        console.error('Error updating guild column', err);
         throw err;
     }
 }
 
-module.exports = { updateGuildData, getGuildData, updateGuildColumn };
+module.exports = { getGuildData, updateGuildColumn };

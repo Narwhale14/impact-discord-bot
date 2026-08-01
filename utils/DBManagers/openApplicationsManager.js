@@ -47,16 +47,17 @@ async function getOpenApplication(logsMessageId) {
     }
 }
 
-async function getOpenApplicationFromPlayerName(playerName) {
+async function getOpenApplicationFromPlayerName(guildDataId, playerName) {
     try {
         const res = await pool.query(
-            `SELECT * FROM open_applications WHERE minecraft_name = $1`,
-            [playerName]
+            `SELECT * FROM open_applications
+            WHERE guild_data_id = $1 AND LOWER(minecraft_name) = LOWER($2)`,
+            [guildDataId, playerName]
         );
 
         return res.rows[0] || null;
     } catch(err) {
-        console.error(`DB error in getOpenApplicationFromPlayerName: attempted to fetch playerName=${playerName}: `, err);
+        console.error(`DB error in getOpenApplicationFromPlayerName: attempted to fetch playerName=${playerName} in guildDataId=${guildDataId}: `, err);
         throw err;
     }
 }

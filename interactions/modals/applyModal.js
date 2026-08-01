@@ -18,8 +18,8 @@ module.exports = {
         const name = interaction.fields.getTextInputValue('minecraft_user_input');
         const profileName = interaction.fields.getTextInputValue('skyblock_profile_name');
 
-        const findOpenApplication = getOpenApplicationFromPlayerName(name);
-        if(!findOpenApplication) return interaction.editReply({ embeds: [embeds.errorEmbed('This player already has an application up!')] });
+        const findOpenApplication = await getOpenApplicationFromPlayerName(guildDBData.id, name);
+        if(findOpenApplication) return interaction.editReply({ embeds: [embeds.errorEmbed('This player already has an application up!')] });
 
         const buttonRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId(`accept_request_button`).setLabel('Accept').setStyle(ButtonStyle.Success),

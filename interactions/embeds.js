@@ -27,11 +27,13 @@ module.exports = {
             .setTimestamp()
     },
 
-    // error message
-    errorEmbed: (message, title = 'ERROR') => {
+    // error message. `details` is appended to the body (usually err.message)
+    errorEmbed: (message, details = null) => {
+        const description = details ? `${message}\n\`\`\`${String(details).slice(0, 1000)}\`\`\`` : message;
+
         return new EmbedBuilder()
-            .setTitle(title)
-            .setDescription(message)
+            .setTitle('ERROR')
+            .setDescription(description)
             .setColor(ERROR_COLOR)
             .setTimestamp()
     }

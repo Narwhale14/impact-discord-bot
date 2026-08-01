@@ -5,9 +5,10 @@ const embeds = require('../embeds.js');
 module.exports = {
     customId: 'deny_request_button',
     async execute(interaction) {
+        await interaction.deferReply({ flags: 64 });
         const logsMessageId = interaction.message.id;
         const app = await getOpenApplication(logsMessageId);
-        if(!app) return interaction.reply({ embeds: [embeds.errorEmbed('Application not found!')], flags: 64 });
+        if(!app) return interaction.editReply({ embeds: [embeds.errorEmbed('Application not found!')] });
 
         try {
             await deleteOpenApplication(logsMessageId);
@@ -33,9 +34,11 @@ module.exports = {
                     ]
                 });
             } catch {}
+
+            await interaction.editReply({ embeds: [embeds.successEmbed(`Denied <@${app.discord_user_id}>'s application.`, embeds.ERROR_COLOR, 'DENIED')], allowedMentions: { users: [] } });
         } catch (err) {
-            console.error(err);
-            await interaction.reply({ embeds: [embeds.errorEmbed(err.message)], flags: 64 });
+            console.error("Failed handling deny button: ", err);
+            await interaction.editReply({ embeds: [embeds.errorEmbed('An error occurred while denying this application.', err.message)] });
         }
     }
 }

@@ -73,7 +73,7 @@ module.exports = {
                     success += `\n\nCurrent in-game guild rank is **${inGameRank}**, expect to be changed to **${eligibleRole.rank}** soon!`;
                     const logsChannel = interaction.guild.channels.cache.get(guildDBData?.logs_channel_id);
                     if(!logsChannel || !logsChannel.isTextBased())
-                        return interaction.reply({ embeds: [embeds.errorEmbed(`Unable to notify staff about your role update\nPlease ping a staff for help.`)], flags: 64 });
+                        return interaction.editReply({ embeds: [embeds.errorEmbed(`Unable to notify staff about your role update\nPlease ping a staff for help.`)] });
                         
                     const logsEmbed = new EmbedBuilder()
                         .setTitle(`New Role Update!`)

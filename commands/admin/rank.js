@@ -181,9 +181,9 @@ module.exports = {
                         components: [] 
                     });
                 } catch(err) {
-                    console.error("An error occured while clearing all roles in '/rank clearroleall: ", err);
-                    await interaction.editReply({ embeds: [embeds.errorEmbed("An error occurred while clearing all rank related roles.", err.message)] });
-                } 
+                    console.error("An error occured while clearing all roles in '/rank clearall': ", err);
+                    await buttonInteraction.editReply({ embeds: [embeds.errorEmbed("An error occurred while clearing all rank related roles.", err.message)] });
+                }
             }
         }
     }

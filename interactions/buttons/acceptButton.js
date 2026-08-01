@@ -53,8 +53,11 @@ module.exports = {
                     ]
                 });
             } catch {}
+
+            await interaction.editReply({ embeds: [embeds.successEmbed(`Accepted <@${app.discord_user_id}>'s application.`, embeds.SUCCESS_COLOR)], allowedMentions: { users: [] } });
         } catch (err) {
-            await interaction.editReply({ embeds: [embeds.errorEmbed(err.message)] });
+            console.error("Failed handling accept button: ", err);
+            await interaction.editReply({ embeds: [embeds.errorEmbed('An error occurred while accepting this application.', err.message)] });
         }
     }
 }

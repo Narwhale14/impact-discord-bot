@@ -62,8 +62,8 @@ module.exports = {
 
         // setrole subcommand
         if(subcommand == 'setrole') {
-            if(guildDBData?.verification_role) 
-                return interaction.reply({ embeds: [embeds.errorEmbed(`The verification role is already set to <@&${guildDBData.verification_role}>.`)], allowedMentions: { roles: [] }});
+            if(guildDBData?.verification_role)
+                return interaction.editReply({ embeds: [embeds.errorEmbed(`The verification role is already set to <@&${guildDBData.verification_role}>.`)], allowedMentions: { roles: [] }});
             const verificationRole = interaction.options.getRole('role');
             if(!verificationRole) 
                 return interaction.editReply({ embeds: [embeds.errorEmbed('Invalid role!')] });

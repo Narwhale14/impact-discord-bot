@@ -56,18 +56,30 @@ client.once('clientReady', async () => {
     console.log(`Logged in as ${client.user.tag}`);
 });
 
+const respondWithError = async (interaction, message, err) => {
+    const payload = { embeds: [embeds.errorEmbed(message, err?.message)], flags: 64 };
+
+    try {
+        if(interaction.deferred) await interaction.editReply(payload);
+        else if(interaction.replied) await interaction.followUp(payload);
+        else await interaction.reply(payload);
+    } catch(replyErr) {
+        console.error('Failed to deliver error response: ', replyErr);
+    }
+}
+
 client.on('interactionCreate', async interaction => {
     if(interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);
         if (!command) return;
         if(command.adminOnly && !interaction.member.permissions.has(PermissionFlagsBits.Administrator))
-           await interaction.reply({ embeds: [embeds.errorEmbed('This command is restricted to admin only!')], flags: 64 });
+           return interaction.reply({ embeds: [embeds.errorEmbed('This command is restricted to admin only!')], flags: 64 });
 
-        try { 
+        try {
             await command.execute(interaction);
         } catch(err) {
             console.error(err);
-            await interaction.reply({ embeds: [embeds.errorEmbed('Error handling command: ', err)], flags: 64 });
+            await respondWithError(interaction, 'Error handling command.', err);
         }
 
         return;
@@ -81,7 +93,7 @@ client.on('interactionCreate', async interaction => {
             await button.execute(interaction);
         } catch(err) {
             console.error(err);
-            await interaction.reply({ embeds: [embeds.errorEmbed('Error handling button: ', err)], flags: 64 });
+            await respondWithError(interaction, 'Error handling button.', err);
         }
         return;
     }
@@ -94,11 +106,7 @@ client.on('interactionCreate', async interaction => {
             await modal.execute(interaction);
         } catch(err) {
             console.error(err);
-
-            if(interaction.replied || interaction.deferred)
-                await interaction.followUp({ embeds: [embeds.errorEmbed('Error handling modal: ', err)], flags: 64 });
-            else 
-                await interaction.reply({ embeds: [embeds.errorEmbed('Error handling modal: ', err)], flags: 64 });
+            await respondWithError(interaction, 'Error handling modal.', err);
         }
     }
 });
