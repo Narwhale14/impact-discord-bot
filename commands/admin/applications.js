@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { updateGuildColumn, getGuildData } = require('../../utils/DBManagers/guildDataManager.js');
+const { getGuildById } = require('../../utils/APIManagers/hypixelAPIManager.js');
 const embeds = require('../../interactions/embeds.js');
 
 /**
@@ -182,9 +183,17 @@ module.exports = {
                 new ButtonBuilder().setCustomId('apply_button').setLabel('Apply').setStyle(ButtonStyle.Success)
             );
 
+            let guildLabel = interaction.guild.name;
+            if(guildDBData?.hypixel_guild_id) {
+                try {
+                    const hypixelGuild = await getGuildById(guildDBData.hypixel_guild_id);
+                    if(hypixelGuild?.name) guildLabel = hypixelGuild.name;
+                } catch {}
+            }
+
             const applicationEmbed = new EmbedBuilder()
                 .setTitle(`Create Application`)
-                .setDescription(`Join the Significant Impact guild!`)
+                .setDescription(`Join the ${guildLabel} guild!`)
                 .setColor(interaction.guild.members.me.displayHexColor)
 
             try {

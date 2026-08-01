@@ -9,7 +9,7 @@ module.exports = {
     async execute(interaction) {
         await interaction.deferReply();
         try {
-            const targetUser = interaction.options.getUser('user') ?? interaction.user;
+            const targetUser = interaction.user;
 
             const existingLink = await getLinkedPlayer(targetUser.id);
             if(!existingLink) 
