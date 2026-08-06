@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, InteractionContextType } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionContextType } = require('discord.js');
 const { getGuildData } = require('../../utils/DBManagers/guildDataManager.js');
 const { getLinkedPlayer } = require('../../utils/DBManagers/linkedPlayersManager.js');
 const { getProfileSkyblockLevelByUUID, getMemberInGuildByPlayerUUID } = require('../../utils/APIManagers/hypixelAPIManager.js');
@@ -78,14 +78,19 @@ module.exports = {
                         
                     const logsEmbed = new EmbedBuilder()
                         .setTitle(`New Role Update!`)
-                        .setDescription(`<@${interaction.user.id}>'s role has upgraded to <@&${eligibleRole.discord_role_id}>\n When available, promote them in-game to **${eligibleRole.rank}**`)
+                        .setDescription(`<@${interaction.user.id}>'s role has upgraded to <@&${eligibleRole.discord_role_id}>\n When available, promote **${linkedPlayer.hypixel_name}** in-game to **${eligibleRole.rank}**`)
                         .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true, size: 1024 }))
-                        .setColor(embeds.SUCCESS_COLOR)
+                        .setColor(embeds.WARNING_COLOR)
                         .setTimestamp();
+
+                    const logsRow = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('role_update_complete_button').setLabel('Complete').setStyle(ButtonStyle.Success)
+                    );
 
                     logsChannel.send({
                         content: `<@&${guildDBData.application_ping}>`,
                         embeds: [logsEmbed],
+                        components: [logsRow],
                         allowedMentions: { roles: [guildDBData.application_ping] }
                     });
                 } else if(guildDBData.role_mappings[inGameRank] && guildDBData.requests_enabled === false) {
