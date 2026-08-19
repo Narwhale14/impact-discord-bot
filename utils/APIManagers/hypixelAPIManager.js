@@ -65,26 +65,45 @@ async function getPlayerByName(playerName) {
     }
 }
 
+async function fetchSkyblockProfiles(playerUUID) {
+    const response = await fetch(`https://api.hypixel.net/v2/skyblock/profiles?uuid=${playerUUID}&key=${process.env.HYPIXEL_API_KEY}`);
+    const data = await response.json();
+
+    // verify connection to api
+    if(!data.success || !Array.isArray(data.profiles))
+        throw new Error(data.cause || 'Unknown Hypixel API error');
+
+    return data.profiles;
+}
+
+function skyblockLevel(profile, playerUUID) {
+    return (profile.members?.[playerUUID]?.leveling?.experience ?? 0) / 100;
+}
+
 async function getProfileSkyblockLevelByUUID(playerUUID, profileName) {
     try {
-        const response = await fetch(`https://api.hypixel.net/v2/skyblock/profiles?uuid=${playerUUID}&key=${process.env.HYPIXEL_API_KEY}`);
-        const data = await response.json();
+        const profiles = await fetchSkyblockProfiles(playerUUID);
 
-        // verify connection to api
-        if(!data.success || !Array.isArray(data.profiles))
-            throw new Error(data.cause || 'Unknown Hypixel API error');
+        const targetProfile = profileName.trim().toLowerCase();
+        const match = profiles.find(p => p.cute_name?.toLowerCase() === targetProfile);
+        if(!match) throw new Error(`Profile "${profileName}" not found!`);
 
-        const targetProfile = profileName?.toLowerCase();
-        const filteredProfiles = data.profiles.filter(p => p.cute_name?.toLowerCase() === targetProfile);
-        if(filteredProfiles.length === 0)
-            throw new Error(targetProfile ? `Profile "${profileName}" not found!` : `No Skyblock profiles found`);
+        return { level: skyblockLevel(match, playerUUID), profile: match.cute_name };
+    } catch(err) {
+        console.log("Error fetching player data: ", err);
+        throw err;
+    }
+}
 
-        const member = filteredProfiles[0].members[playerUUID];
+// bulk use only, where no profile can be asked for
+async function getBestSkyblockLevelByUUID(playerUUID) {
+    try {
+        const profiles = await fetchSkyblockProfiles(playerUUID);
+        if(profiles.length === 0) throw new Error('No Skyblock profiles found!');
 
-        return {
-            level: (member.leveling?.experience / 100) ?? 0,
-            profile: filteredProfiles[0].cute_name
-        };
+        const best = profiles.reduce((a, b) => skyblockLevel(b, playerUUID) > skyblockLevel(a, playerUUID) ? b : a);
+
+        return { level: skyblockLevel(best, playerUUID), profile: best.cute_name };
     } catch(err) {
         console.log("Error fetching player data: ", err);
         throw err;
@@ -111,5 +130,6 @@ module.exports = {
     getPlayerByName, 
     getMemberInGuildByPlayerUUID, 
     getProfileSkyblockLevelByUUID,
+    getBestSkyblockLevelByUUID,
     isPlayerInGuild
 };

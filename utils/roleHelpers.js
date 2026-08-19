@@ -11,11 +11,29 @@ function getEligibleRoleId(roleMappings, level) {
     };
 }
 
-async function removeMappedRoles(memberDiscord, roleMappings) {
-    for(const rankObj of Object.values(roleMappings)) {
-        const rid = rankObj.discord_role_id;
-        if(rid && memberDiscord.roles.cache.has(rid)) await memberDiscord.roles.remove(rid);
-    }
+function mappedRolesHeld(memberDiscord, roleMappings) {
+    return Object.values(roleMappings || {}).map(r => r.discord_role_id).filter(rid => rid && memberDiscord.roles.cache.has(rid))
 }
 
-module.exports = { getEligibleRoleId, removeMappedRoles };
+async function removeMappedRoles(memberDiscord, roleMappings) {
+    const rolesToRemove = mappedRolesHeld(memberDiscord, roleMappings)
+    if(rolesToRemove.length === 0) return 0;
+
+    await memberDiscord.roles.remove(rolesToRemove)
+    return rolesToRemove.length
+}
+
+async function updateMappedRole(memberDiscord, roleMappings, targetRoleId) {
+    const held = mappedRolesHeld(memberDiscord, roleMappings);
+    const staleRoles = held.filter(rid => rid !== targetRoleId);
+    const hasTarget = held.includes(targetRoleId);
+
+    if(hasTarget && staleRoles.length === 0) return false;
+
+    if(staleRoles.length > 0) await memberDiscord.roles.remove(staleRoles);
+    if(!hasTarget) await memberDiscord.roles.add(targetRoleId)
+
+    return true
+}
+
+module.exports = { getEligibleRoleId, removeMappedRoles, updateMappedRole };

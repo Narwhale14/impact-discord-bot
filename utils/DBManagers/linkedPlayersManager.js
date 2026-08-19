@@ -35,6 +35,15 @@ async function getLinkedPlayer(discordId, guildDataId) {
     }
 }
 
+async function getAllLinkedPlayers(guildDataId) {
+    try {
+        return db.prepare(`SELECT * FROM linked_players WHERE guild_data_id = ?`).all(guildDataId);
+    } catch(err) {
+        console.error(`DB error in getAllLinkedPlayers: attempted to fetch guildDataId=${guildDataId}: `, err);
+        throw err;
+    }
+}
+
 async function countLinkedPlayers(guildDataId) {
     try {
         return db.prepare(`SELECT COUNT(*) c FROM linked_players WHERE guild_data_id = ?`).get(guildDataId).c;
@@ -44,4 +53,4 @@ async function countLinkedPlayers(guildDataId) {
     }
 }
 
-module.exports = { updateLinkedPlayers, deleteLinkedPlayer, getLinkedPlayer, countLinkedPlayers };
+module.exports = { updateLinkedPlayers, deleteLinkedPlayer, getLinkedPlayer, countLinkedPlayers, getAllLinkedPlayers };

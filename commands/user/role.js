@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { getGuildData } = require('../../utils/DBManagers/guildDataManager.js');
 const { getLinkedPlayer } = require('../../utils/DBManagers/linkedPlayersManager.js');
 const { getProfileSkyblockLevelByUUID, getMemberInGuildByPlayerUUID } = require('../../utils/APIManagers/hypixelAPIManager.js');
-const { getEligibleRoleId, removeMappedRoles } = require('../../utils/roleHelpers.js');
+const { getEligibleRoleId, removeMappedRoles, updateMappedRole } = require('../../utils/roleHelpers.js');
 const embeds = require('../../interactions/embeds.js');
 
 /**
@@ -65,8 +65,7 @@ module.exports = {
                     return interaction.editReply({ embeds: [embeds.errorEmbed(`No Discord role available for profile **${profile}** (level: ${level})`)] });
 
                 const memberDiscord = await interaction.guild.members.fetch(interaction.user.id);
-                await removeMappedRoles(memberDiscord, guildDBData.role_mappings);
-                await memberDiscord.roles.add(eligibleRole.discord_role_id);
+                await updateMappedRole(memberDiscord, guildDBData.role_mappings, eligibleRole.discord_role_id)
                 
                 // message builder
                 let success = `Successfully updated role to <@&${eligibleRole.discord_role_id}> based on Skyblock profile **${profile}** (level: ${level})!`;
@@ -116,13 +115,7 @@ module.exports = {
             let cleared = false;
 
             try {
-                for(const rankObj of Object.values(roleMappings)) {
-                    const rid = rankObj.discord_role_id;
-                    if(rid && memberDiscord.roles.cache.has(rid)) {
-                        await memberDiscord.roles.remove(rid);
-                        cleared = true;
-                    }
-                }
+                cleared = await removeMappedRoles(memberDiscord, roleMappings)
             } catch(err) {
                 console.error("Failed running '/role clear': ", err);
                 return interaction.editReply({ embeds: [embeds.errorEmbed('An error occured while clearing your role.')] });
