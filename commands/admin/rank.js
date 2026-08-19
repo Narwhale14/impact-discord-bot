@@ -146,14 +146,14 @@ module.exports = {
             runningUpdates.add(interaction.guild.id);
 
             try {
-                await interaction.editReply({ embeds: [embeds.successEmbed('This may take some time.', embeds.WARNING_COLOR, 'Updating Roles...')] });
+                const progressEmbed = scanned => embeds.successEmbed(`Players Scanned: **${scanned}** / **${linkedPlayers.length}**\nThis may take some time.`, embeds.WARNING_COLOR, 'Updating Roles...');
+                await interaction.editReply({ embeds: [progressEmbed(0)] });
 
                 const hypixelGuild = await getGuildById(guildDBData.hypixel_guild_id);
                 const ranksByUUID = new Map(hypixelGuild.members.map(m => [m.uuid, m.rank?.toUpperCase()]));
 
                 const logsChannel = interaction.guild.channels.cache.get(guildDBData?.logs_channel_id);
                 const canNotify = guildDBData.requests_enabled === true && logsChannel?.isTextBased();
-                const ping = guildDBData.application_ping;
 
                 await interaction.guild.members.fetch();
 
@@ -187,10 +187,8 @@ module.exports = {
                         );
 
                         await logsChannel.send({
-                            content: ping ? `<@&${ping}>` : undefined,
                             embeds: [logsEmbed],
-                            components: [logsRow],
-                            allowedMentions: { roles: ping ? [ping] : [] }
+                            components: [logsRow]
                         });
                     } catch(err) {
                         stats.failed++;
@@ -200,6 +198,8 @@ module.exports = {
 
                 for(let i = 0; i < linkedPlayers.length; i += CHUNK_SIZE) {
                     await Promise.all(linkedPlayers.slice(i, i + CHUNK_SIZE).map(processPlayer));
+                    await interaction.editReply({ embeds: [progressEmbed(Math.min(i + CHUNK_SIZE, linkedPlayers.length))] }).catch(() => null);
+
                     if(i + CHUNK_SIZE < linkedPlayers.length) await sleep(CHUNK_DELAY_MS);
                 }
 
